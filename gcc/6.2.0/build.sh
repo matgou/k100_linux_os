@@ -59,9 +59,10 @@ function testpackage {
 	../contrib/test_summary > DESTDIR=$curdir/test_summary.log
 }
 
-function install {
+function installpackage {
         cd $curdir/gcc-6.2.0/build
-	make DESTDIR=$curdir/fakeroot install
+
+	make DESTDIR=$curdir/fakeroot install >> $curdir/make.log
 	test_rc $?
 
 	cd $curdir/fakeroot
@@ -72,17 +73,12 @@ function install {
 	ln -sv gcc usr/bin/cc
 
 	install -v -dm755 usr/lib/bfd-plugins
-	test_rc $?
-
 	ln -sfv ../../libexec/gcc/$(gcc -dumpmachine)/6.2.0/liblto_plugin.so \
         	usr/lib/bfd-plugins/
-	test_rc $?
 
 	mkdir -pv usr/share/gdb/auto-load/usr/lib
-	test_rc $?
 
-	mv -v usr/lib/*gdb.py usr/share/gdb/auto-load/usr/lib
-	test_rc $?
+	mv -v usr/lib64/*gdb.py usr/share/gdb/auto-load/usr/lib
 }
 
 function package {
@@ -103,14 +99,14 @@ case "$ARG" in
 		extract
 		compile
 		testpackage
-		install
+		installpackage
 		package
 		;;
 	"clean") clean ;;
 	"extract") extract ;;
 	"compile") compile ;;
 	"testpackage") testpackage ;;
-	"install") install ;;
+	"install") installpackage ;;
 	"package") package ;;
 	*) echo "usage: build.sh [all|clean|extract|compile|testpackage|install|package]"; exit 255 ;;
 esac

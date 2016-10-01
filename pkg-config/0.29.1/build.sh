@@ -15,31 +15,69 @@ cd $curdir
 #
 # Extract source inside directory
 #
-tar xvf pkg-config-0.29.1.tar.gz
-test_rc $?
+function clean {
+	rm -rf pkg-config-0.29.1
+	rm -rf fakeroot
+}
 
-cd pkg-config-0.29.1
-test_rc $?
+function extract {
+	tar xvf pkg-config-0.29.1.tar.gz
+	test_rc $?
+}
 
-./configure --prefix=/usr              \
+function compile {
+	cd pkg-config-0.29.1
+	test_rc $?
+
+	./configure --prefix=/usr              \
             --with-internal-glib       \
             --disable-compile-warnings \
             --disable-host-tool        \
             --docdir=/usr/share/doc/pkg-config-0.29.1
-test_rc $?
+	test_rc $?
 
-make
-test_rc $?
+	make
+	test_rc $?
+}
 
-make check
-test_rc $?
+function testpackage {
+	make check
+	test_rc $?
+}
 
-make DESTDIR=$curdir/fakeroot install
-test_rc $?
+function installpackage {
+	make DESTDIR=$curdir/fakeroot install
+	test_rc $?
+}
 
-cd $curdir/fakeroot
-test_rc $?
+function package {
+	cd $curdir/fakeroot
+	test_rc $?
 
-tar -czvf /packages/${pkg_name}-${pkg_version}.tgz *
-test_rc $?
+	tar -czvf /packages/${pkg_name}-${pkg_version}.tgz *
+	test_rc $?
+}
 
+if [ $# -gt 0 ]; then
+        ARG=$1
+else
+        ARG=all
+fi
+
+case "$ARG" in
+        "all")
+                clean
+                extract
+                compile
+                testpackage
+                installpackage
+                package
+                ;;
+        "clean") clean ;;
+        "extract") extract ;;
+        "compile") compile ;;
+        "testpackage") testpackage ;;
+        "install") installpackage ;;
+        "package") package ;;
+        *) echo "usage: build.sh [all|clean|extract|compile|testpackage|install|package]"; exit 255 ;;
+esac
